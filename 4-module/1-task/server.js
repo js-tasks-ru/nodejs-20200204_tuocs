@@ -12,7 +12,6 @@ server.on('request', (req, res) => {
 
   switch (req.method) {
     case 'GET':
-      console.log(req.url);
       if (path.parse(req.url).dir !== '/') {
         res.statusCode = 400;
         res.end('Invalid filename');
