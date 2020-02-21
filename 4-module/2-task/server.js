@@ -44,7 +44,15 @@ server.on('request', (req, res) => {
               });
             }
           })
-          .on('close', () => {
+          .on('close', (err) => {
+            if (err) {
+              if (fs.existsSync(filepath)) {
+                fs.unlink(filepath, (e) => {
+                  res.statusCode = 500;
+                  res.end('Internal server error');
+                });
+              }
+            }
             res.statusCode = 201;
             res.end('File created');
           });
