@@ -47,15 +47,6 @@ server.on('request', (req, res) => {
             res.statusCode = 201;
             res.end('File created');
           });
-
-      req.on('close', () => {
-        if (fs.existsSync(filepath)) {
-          fs.unlink(filepath, () => {
-            res.statusCode = 500;
-            res.end('Somthing went wrong');
-          });
-        }
-      });
       break;
 
     default:
