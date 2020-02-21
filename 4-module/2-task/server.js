@@ -32,7 +32,8 @@ server.on('request', (req, res) => {
             if (fs.existsSync(filepath)) {
               fs.unlink(filepath, (e) => {
                 res.statusCode = 413;
-                res.end('File is too big');});
+                res.end('File is too big');
+              });
             }
           })
           .pipe(writeStream)
@@ -44,18 +45,20 @@ server.on('request', (req, res) => {
               });
             }
           })
-          .on('close', (err) => {
-            if (err) {
-              if (fs.existsSync(filepath)) {
-                fs.unlink(filepath, (e) => {
-                  res.statusCode = 500;
-                  res.end('Internal server error');
-                });
-              }
+          .on('close', () => {
+            if (!req.complete) {
+              writeStream.destroy();
+              fs.unlink(filepath, () => {
+                res.statusCode = 500;
+                res.end('Internal server error');
+              });
             }
-            res.statusCode = 201;
-            res.end('File created');
           });
+
+      writeStream.on('close', () => {
+        res.statusCode = 201;
+        res.end('File created');
+      });
       break;
 
     default:
