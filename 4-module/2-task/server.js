@@ -55,6 +55,13 @@ server.on('request', (req, res) => {
             }
           });
 
+      req.on('aborted', () => {
+        writeStream.destroy();
+        fs.unlink(filepath, (err) => {
+          if (err) throw new Error();
+        });
+      });
+
       writeStream.on('close', () => {
         res.statusCode = 201;
         res.end('File created');
