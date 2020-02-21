@@ -1,7 +1,7 @@
 const url = require('url');
 const http = require('http');
 const path = require('path');
-
+const fs = require('fs');
 const server = new http.Server();
 
 server.on('request', (req, res) => {
@@ -11,7 +11,24 @@ server.on('request', (req, res) => {
 
   switch (req.method) {
     case 'DELETE':
-
+      if (path.parse(req.url).dir !== '/') {
+        res.statusCode = 400;
+        res.end('Invalid filename');
+        return;
+      }
+      if (!fs.existsSync(filepath)) {
+        res.statusCode = 404;
+        res.end('File not found');
+        return;
+      }
+      fs.unlink(filepath, (e) => {
+        if (e) {
+          res.statusCode = 500;
+          res.end('Internal server error');
+        }
+        res.statusCode = 200;
+        res.end('File removed');
+      });
       break;
 
     default:
