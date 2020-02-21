@@ -30,18 +30,19 @@ server.on('request', (req, res) => {
           .pipe(limitedStream)
           .on('error', (err) => {
             if (fs.existsSync(filepath)) {
-              fs.unlink(filepath, (e) => {});
+              fs.unlink(filepath, (e) => {
+                res.statusCode = 413;
+                res.end('File is too big');});
             }
-            res.statusCode = 413;
-            res.end('File is too big');
           })
           .pipe(writeStream)
           .on('error', (err) => {
             if (fs.existsSync(filepath)) {
-              fs.unlink(filepath, (e) => {});
+              fs.unlink(filepath, (e) => {
+                res.statusCode = 500;
+                res.end('Internal server error');
+              });
             }
-            res.statusCode = 500;
-            res.end('Internal server error');
           })
           .on('close', () => {
             res.statusCode = 201;
