@@ -1,7 +1,8 @@
 const url = require('url');
 const http = require('http');
 const path = require('path');
-
+const fs = require('fs');
+const LimitSizeStream= require('./LimitSizeStream');
 const server = new http.Server();
 
 server.on('request', (req, res) => {
@@ -11,7 +12,50 @@ server.on('request', (req, res) => {
 
   switch (req.method) {
     case 'POST':
+      if (fs.existsSync(filepath)) {
+        res.statusCode = 409;
+        res.end('File exist');
+        return;
+      }
+      if (path.parse(req.url).dir !== '/') {
+        res.statusCode = 400;
+        res.end('Invalid filename');
+        return;
+      }
 
+      const limitedStream = new LimitSizeStream({limit: 1024 * 1024});
+      const writeStream = fs.createWriteStream(filepath, {flags: 'wx'});
+
+      req
+          .pipe(limitedStream)
+          .on('error', (err) => {
+            if (fs.existsSync(filepath)) {
+              fs.unlink(filepath, (e) => {});
+            }
+            res.statusCode = 413;
+            res.end('File is too big');
+          })
+          .pipe(writeStream)
+          .on('error', (err) => {
+            if (fs.existsSync(filepath)) {
+              fs.unlink(filepath, (e) => {});
+            }
+            res.statusCode = 500;
+            res.end('Internal server error');
+          })
+          .on('close', () => {
+            res.statusCode = 201;
+            res.end('File created');
+          });
+
+      req.on('close', () => {
+        if (fs.existsSync(filepath)) {
+          fs.unlink(filepath, () => {
+            res.statusCode = 500;
+            res.end('Somthing went wrong');
+          });
+        }
+      });
       break;
 
     default:
