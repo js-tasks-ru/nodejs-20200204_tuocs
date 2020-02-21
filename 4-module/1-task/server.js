@@ -1,6 +1,7 @@
 const url = require('url');
 const http = require('http');
 const path = require('path');
+const fs = require('fs');
 
 const server = new http.Server();
 
@@ -11,7 +12,20 @@ server.on('request', (req, res) => {
 
   switch (req.method) {
     case 'GET':
-
+      if (path.parse(req.url).dir !== '/') {
+        res.statusCode = 400;
+        res.end('Invalid filename');
+        return;
+      }
+      fs.readFile(filepath, function(err, data) {
+        if (err) {
+          res.writeHead(404);
+          res.end(JSON.stringify(err));
+          return;
+        }
+        res.writeHead(200);
+        res.end(data);
+      });
       break;
 
     default:
