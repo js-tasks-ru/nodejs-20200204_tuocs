@@ -1,8 +1,7 @@
-const path = require('path');
 const Koa = require('koa');
 const app = new Koa();
 
-app.use(require('koa-static')(path.join(__dirname, 'public')));
+app.use(require('koa-static')('public'));
 app.use(require('koa-bodyparser')());
 
 const Router = require('koa-router');
@@ -11,7 +10,9 @@ const router = new Router();
 const subscribers = {};
 
 router.get('/subscribe', async (ctx, next) => {
-  const id = ctx.request.query.r ? ctx.request.query.r : Math.random().toString();
+  const id = ctx.request.query.r ?
+    ctx.request.query.r :
+    Math.random().toString();
   const message = await new Promise((resolve) => {
     subscribers[id] = resolve;
   });
@@ -36,5 +37,6 @@ router.post('/publish', async (ctx, next) => {
 });
 
 app.use(router.routes());
+
 
 module.exports = app;
